@@ -21,13 +21,16 @@ class ShipStationApi extends BasicClient
         string $apiKey,
         string $apiSecret,
     ) {
-        return parent::__construct(
+        parent::__construct(
             baseUrl: 'https://ssapi.shipstation.com/',
             username: $apiKey,
             password: $apiSecret,
             encodingMethod: EncodingMethod::base64,
             delayHeader: "X-Rate-Limit-Reset",
         );
+
+        $this->setResponseErrorDetector('Message');
+        $this->setErrorMessageParser(fn ($data) => $data['Message'] ?? json_encode($data));
     }
 
     /**
@@ -72,7 +75,7 @@ class ShipStationApi extends BasicClient
         OrderSort $sortBy = OrderSort::order_date,
         ?SortDir $sortDir = SortDir::desc,
     ): array {
-        $query =[
+        $query = [
             "pageSize" => $pageSize,
             "page" => $page,
         ];
