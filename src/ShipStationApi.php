@@ -160,6 +160,27 @@ class ShipStationApi extends BasicClient
      * @return array
      * @throws GuzzleException
      */
+    /**
+     * @param int|null $loopLimit
+     * @param string|null $customerName
+     * @param string|null $itemKeyword
+     * @param string|null $createDateStart
+     * @param string|null $createDateEnd
+     * @param string|null $customsCountryCode
+     * @param string|null $modifyDateStart
+     * @param string|null $modifyDateEnd
+     * @param string|null $orderDateStart
+     * @param string|null $orderDateEnd
+     * @param string|null $orderNumber
+     * @param OrderStatus|null $orderStatus
+     * @param string|null $paymentDateStart
+     * @param string|null $paymentDateEnd
+     * @param int|null $storeId
+     * @param OrderSort $sortBy
+     * @param SortDir|null $sortDir
+     * @return array
+     * @throws GuzzleException
+     */
     public function getAllOrders(
         ?int $loopLimit = null,
         ?string $customerName = null,
@@ -209,8 +230,80 @@ class ShipStationApi extends BasicClient
             if (!isset($pages) && isset($response['pages'])) {
                 $pages = $response['pages'];
             }
-        } while (isset($pages) && $page <= $pages && (is_null($loopLimit) || $page < $loopLimit));
+        } while (isset($pages) && $page < $pages && (is_null($loopLimit) || $page < $loopLimit));
 
         return ['orders' => $orders];
+    }
+
+    /**
+     * @param callable $callback
+     * @param string|null $customerName
+     * @param string|null $itemKeyword
+     * @param string|null $createDateStart
+     * @param string|null $createDateEnd
+     * @param string|null $customsCountryCode
+     * @param string|null $modifyDateStart
+     * @param string|null $modifyDateEnd
+     * @param string|null $orderDateStart
+     * @param string|null $orderDateEnd
+     * @param string|null $orderNumber
+     * @param OrderStatus|null $orderStatus
+     * @param string|null $paymentDateStart
+     * @param string|null $paymentDateEnd
+     * @param int|null $storeId
+     * @param OrderSort $sortBy
+     * @param SortDir|null $sortDir
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllOrdersAndProcess(
+        callable $callback,
+        ?string $customerName = null,
+        ?string $itemKeyword = null,
+        ?string $createDateStart = null,
+        ?string $createDateEnd = null,
+        ?string $customsCountryCode = null,
+        ?string $modifyDateStart = null,
+        ?string $modifyDateEnd = null,
+        ?string $orderDateStart = null,
+        ?string $orderDateEnd = null,
+        ?string $orderNumber = null,
+        ?OrderStatus $orderStatus = null,
+        ?string $paymentDateStart = null,
+        ?string $paymentDateEnd = null,
+        ?int $storeId = null,
+        OrderSort $sortBy = OrderSort::order_date,
+        ?SortDir $sortDir = SortDir::desc,
+    ): void {
+        $page = 0;
+
+        do {
+            $page++;
+            $response = $this->getOrders(
+                page: $page,
+                customerName: $customerName,
+                itemKeyword: $itemKeyword,
+                createDateStart: $createDateStart,
+                createDateEnd: $createDateEnd,
+                customsCountryCode: $customsCountryCode,
+                modifyDateStart: $modifyDateStart,
+                modifyDateEnd: $modifyDateEnd,
+                orderDateStart: $orderDateStart,
+                orderDateEnd: $orderDateEnd,
+                orderNumber: $orderNumber,
+                orderStatus: $orderStatus,
+                paymentDateStart: $paymentDateStart,
+                paymentDateEnd: $paymentDateEnd,
+                storeId: $storeId,
+                sortBy: $sortBy,
+                sortDir: $sortDir,
+            );
+            if (!empty($response['orders'])) {
+                $callback($response['orders']);
+            }
+            if (!isset($pages) && isset($response['pages'])) {
+                $pages = $response['pages'];
+            }
+        } while (isset($pages) && $page < $pages);
     }
 }
