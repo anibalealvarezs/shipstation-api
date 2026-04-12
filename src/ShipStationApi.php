@@ -15,11 +15,13 @@ class ShipStationApi extends BasicClient
     /**
      * @param string $apiKey
      * @param string $apiSecret
+     * @param \GuzzleHttp\Client|null $guzzleClient
      * @throws GuzzleException
      */
     public function __construct(
         string $apiKey,
         string $apiSecret,
+        ?\GuzzleHttp\Client $guzzleClient = null,
     ) {
         parent::__construct(
             baseUrl: 'https://ssapi.shipstation.com/',
@@ -27,6 +29,7 @@ class ShipStationApi extends BasicClient
             password: $apiSecret,
             encodingMethod: EncodingMethod::base64,
             delayHeader: "X-Rate-Limit-Reset",
+            guzzleClient: $guzzleClient,
         );
 
         $this->setResponseErrorDetector('Message');
@@ -154,12 +157,6 @@ class ShipStationApi extends BasicClient
      * @param OrderStatus|null $orderStatus
      * @param string|null $paymentDateStart
      * @param string|null $paymentDateEnd
-     * @param int|null $storeId
-     * @param OrderSort $sortBy
-     * @param SortDir|null $sortDir
-     * @return array
-     * @throws GuzzleException
-     */
     /**
      * @param int|null $loopLimit
      * @param string|null $customerName
