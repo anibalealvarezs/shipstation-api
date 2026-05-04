@@ -20,6 +20,18 @@ Require the package in the `composer.json` file of your project, and map the pac
 
 ## Methods
 
+## Error Handling
+
+- The SDK now uses a semantic classifier at `src/Support/ShipStationErrorClassifier.php`.
+- `ShipStationApi` configures a callable detector with:
+
+```php
+$this->setRateLimitDetector([ShipStationErrorClassifier::class, 'isRetryable']);
+```
+
+- Retry behavior is intentionally strict and only targets throttling/rate-limit signals (`429`, `rate limit`, `too many requests`, `throttled`).
+- Non-throttling failures continue through the standard exception flow.
+
 - ### getOrders: *Array*
 
   `Gets the list of orders according to the specified page/pageSize.`
