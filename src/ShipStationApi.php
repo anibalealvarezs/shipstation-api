@@ -8,6 +8,7 @@ use Anibalealvarezs\ApiSkeleton\Enums\EncodingMethod;
 use Anibalealvarezs\ShipStationApi\Enums\OrderSort;
 use Anibalealvarezs\ShipStationApi\Enums\OrderStatus;
 use Anibalealvarezs\ShipStationApi\Enums\SortDir;
+use Anibalealvarezs\ShipStationApi\Support\ShipStationErrorClassifier;
 use GuzzleHttp\Exception\GuzzleException;
 
 class ShipStationApi extends BasicClient
@@ -34,6 +35,7 @@ class ShipStationApi extends BasicClient
 
         $this->setResponseErrorDetector('Message');
         $this->setErrorMessageParser(fn ($data) => $data['Message'] ?? json_encode($data));
+        $this->setRateLimitDetector([ShipStationErrorClassifier::class, 'isRetryable']);
     }
 
     /**

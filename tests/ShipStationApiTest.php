@@ -14,6 +14,7 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Exception\GuzzleException;
 use PHPUnit\Framework\TestCase;
 use Anibalealvarezs\ShipStationApi\ShipStationApi;
+use Anibalealvarezs\ShipStationApi\Support\ShipStationErrorClassifier;
 use Symfony\Component\Yaml\Yaml;
 use Anibalealvarezs\ApiSkeleton\Classes\Exceptions\ApiRequestException;
 
@@ -204,5 +205,43 @@ class ShipStationApiTest extends TestCase
         $this->expectException(ApiRequestException::class);
 
         $client->getAllOrdersAndProcess(function ($data) {});
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function testShipStationSemanticRetryableFalsy200EventuallySucceeds(): void
+    {
+        $retryableBody = [
+            'Message' => 'Too many requests. Please retry in a moment.',
+        ];
+        $successBody = [
+            'orders' => [],
+            'total' => 0,
+            'page' => 1,
+            'pages' => 0,
+        ];
+
+        $mock = new MockHandler([
+            new Response(200, [], json_encode($retryableBody)),
+            new Response(200, [], json_encode($successBody)),
+        ]);
+        $guzzle = $this->createMockedGuzzleClient($mock);
+        $client = new ShipStationApi(apiKey: 'key', apiSecret: 'secret', guzzleClient: $guzzle);
+
+        $response = $client->performRequest(method: 'GET', endpoint: 'orders');
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertTrue(is_callable($client->getRateLimitDetector()));
+    }
+
+    public function testShipStationErrorClassifierRecognizesThrottlingSignals(): void
+    {
+        $classification = ShipStationErrorClassifier::classify([
+            'Message' => 'Rate limit exceeded',
+            'status' => 429,
+        ]);
+
+        $this->assertSame('retryable', $classification['category']);
+        $this->assertTrue($classification['should_retry']);
     }
 }
